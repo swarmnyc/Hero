@@ -32,8 +32,8 @@ public class HeroIndependentController: HeroBaseController {
     completionCallback = completion
 
     prepareForTransition()
-    context.defaultCoordinateSpace = .sameParent
-    context.set(fromViews: fromViews, toViews: toViews)
+    context?.defaultCoordinateSpace = .sameParent
+    context?.set(fromViews: fromViews, toViews: toViews)
     processContext()
     prepareForAnimation()
     animate()

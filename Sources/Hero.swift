@@ -91,8 +91,8 @@ public class Hero: HeroBaseController {
     return !inContainerController && (fromViewController!.modalPresentationStyle == .overFullScreen || fromViewController!.modalPresentationStyle == .overCurrentContext)
   }
 
-  internal var toView: UIView { return toViewController!.view }
-  internal var fromView: UIView { return fromViewController!.view }
+  internal var toView: UIView? { return toViewController?.view }
+  internal var fromView: UIView? { return fromViewController?.view }
 
   internal override init() { super.init() }
 }
@@ -137,7 +137,7 @@ internal extension Hero {
     }
 
     // take a snapshot to hide all the flashing that might happen
-    fullScreenSnapshot = transitionContainer.window?.snapshotView(afterScreenUpdates: true) ?? fromView.snapshotView(afterScreenUpdates: true)
+    fullScreenSnapshot = transitionContainer.window?.snapshotView(afterScreenUpdates: true) ?? fromView?.snapshotView(afterScreenUpdates: true)
     (transitionContainer.window ?? transitionContainer)?.addSubview(fullScreenSnapshot)
 
     if let oldSnapshot = fromViewController?.heroStoredSnapshot {
@@ -148,12 +148,14 @@ internal extension Hero {
       oldSnapshot.removeFromSuperview()
       toViewController?.heroStoredSnapshot = nil
     }
-
+    guard let toView = self.toView, let fromView = self.fromView else {
+      return
+    }
     prepareForTransition()
     insert(preprocessor: DefaultAnimationPreprocessor(hero: self), before: DurationPreprocessor.self)
 
-    context.loadViewAlpha(rootView: toView)
-    context.loadViewAlpha(rootView: fromView)
+    context?.loadViewAlpha(rootView: toView)
+    context?.loadViewAlpha(rootView: fromView)
     container.addSubview(toView)
     container.addSubview(fromView)
 
@@ -162,12 +164,12 @@ internal extension Hero {
     toView.setNeedsLayout()
     toView.layoutIfNeeded()
 
-    context.set(fromViews: fromView.flattenedViewHierarchy, toViews: toView.flattenedViewHierarchy)
+    context?.set(fromViews: fromView.flattenedViewHierarchy, toViews: toView.flattenedViewHierarchy)
 
     processContext()
     prepareForAnimation()
 
-    context.hide(view: toView)
+    context?.hide(view: toView)
 
     #if os(tvOS)
       animate()
@@ -185,6 +187,9 @@ internal extension Hero {
   }
 
   override func animate() {
+    guard let context = self.context, let toView = self.toView else {
+      return
+    }
     context.unhide(view: toView)
 
     if let containerColor = containerColor {
@@ -208,7 +213,7 @@ internal extension Hero {
   }
 
   override func complete(finished: Bool) {
-    guard transitioning else { return }
+    guard transitioning, let context = self.context, let toView = self.toView, let fromView = self.fromView else { return }
 
     context.clean()
     if finished && presenting && toOverFullScreen {

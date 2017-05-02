@@ -26,7 +26,7 @@ import UIKit
 public class HeroBaseController: NSObject {
   // MARK: Properties
   /// context object holding transition informations
-  public internal(set) var context: HeroContext!
+  public internal(set) var context: HeroContext?
   /// whether or not we are handling transition interactively
   public var interactive: Bool {
     return displayLink == nil
@@ -192,9 +192,9 @@ public extension HeroBaseController {
    - view: the view to override to
    */
   public func apply(modifiers: [HeroModifier], to view: UIView) {
-    guard transitioning else { return }
+    guard transitioning, let context = context else { return }
     let targetState = HeroTargetState(modifiers: modifiers)
-    if let otherView = self.context.pairedView(for: view) {
+    if let otherView = context.pairedView(for: view) {
       for animator in self.animators {
         animator.apply(state: targetState, to: otherView)
       }
@@ -269,14 +269,14 @@ internal extension HeroBaseController {
   }
 
   func processContext() {
-    guard transitioning else { fatalError() }
+    guard transitioning, let context = self.context else { return assertionFailure("No context was set or we are not transitioning") }
     for processor in processors {
       processor.process(fromViews: context.fromViews, toViews: context.toViews)
     }
   }
 
   func prepareForAnimation() {
-    guard transitioning else { fatalError() }
+    guard transitioning, let context = self.context else { return assertionFailure("No context was set or we are not transitioning") }
     animatingViews = [([UIView], [UIView])]()
     for animator in animators {
       let currentFromViews = context.fromViews.filter { (view: UIView) -> Bool in
@@ -292,7 +292,7 @@ internal extension HeroBaseController {
   /// Actually animate the views
   /// subclass should call `prepareForTransition` & `prepareForAnimation` before calling `animate`
   func animate() {
-    guard transitioning else { fatalError() }
+    guard transitioning, let context = self.context else { return assertionFailure("No context was set or we are not transitioning") }
     for (currentFromViews, currentToViews) in animatingViews {
       // auto hide all animated views
       for view in currentFromViews {
