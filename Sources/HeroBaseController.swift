@@ -169,7 +169,7 @@ public extension HeroBaseController {
    */
   public func cancel(animate: Bool = true) {
     DispatchQueue.main.async {
-      self.cancel(animated)
+      self.cancel(animate)
     }
   }
   
